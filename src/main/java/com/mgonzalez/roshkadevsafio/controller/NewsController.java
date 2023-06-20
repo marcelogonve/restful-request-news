@@ -12,9 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
+import com.mgonzalez.roshkadevsafio.interfaces.NewsControllerInterface;
+
 @RestController
-public class NewsController {
+public class NewsController implements NewsControllerInterface {
     
+    @Override
     @RequestMapping("/consulta")
     public ResponseEntity<Object> getNews(@RequestParam(value = "query", defaultValue="") String query) {
         Logger log = LoggerFactory.getLogger(NewsController.class);
