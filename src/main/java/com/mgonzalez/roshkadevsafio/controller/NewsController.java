@@ -1,17 +1,16 @@
 package com.mgonzalez.roshkadevsafio.controller;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.mgonzalez.roshkadevsafio.interfaces.NewsControllerInterface;
 
 @RestController
@@ -31,18 +30,33 @@ public class NewsController implements NewsControllerInterface {
         }
 
         try {
-            // Se realiza la llamada HTTP y se procesa el documento HTML
-            Document doc = Jsoup.connect("https://www.abc.com.py/buscador/?query=" + query).get();
+            /*
+             * En primera instancia se intentó realizar web scraping directamente a la página de ABC
+             * Sin embargo, el buscador de su web utiliza api.queryly.com para realizar las consultas
+             * Por lo que el resultado estaba vacío
+             * Entonces, se realiza un reenfoque y se hacen las consultas directamente a la API
+             */
+            // Document doc = Jsoup.connect("https://www.abc.com.py/buscador/?query=" + query).get();
+            // Elements newsElements = doc.select(".queryly_item_row");
 
-            // Se debe tener en cuenta que esto depende de la estructura de la web
-            // Jsoup permite navegar y manipular el árbol DOM
-            // Hacemos web scraping para iterar sobre los elementos necesarios
-            Elements newsElements = doc.select(".queryly_item_row");
+            // Se crea la URL de la API con el texto de búsqueda
+            UriComponentsBuilder ucb = UriComponentsBuilder.fromHttpUrl("https://api.queryly.com/json.aspx")
+                .queryParam("queryly_key", "33530b56c6aa4c20")
+                .queryParam("query", query)
+                .queryParam("endindex", "0")
+                .queryParam("batchsize", "20")
+                .queryParam("callback", "searchPage.resultcallback")
+                .queryParam("showfaceted", "true")
+                .queryParam("extendeddatafields", "creator,imageresizer,promo_image")
+                .queryParam("timezoneoffset", "240");
+            
+            String url = ucb.toUriString();
 
-            for(Element newsElement : newsElements) {
-                log.info("DOM: {}", newsElement);
-                break;
-            }
+            // Se realiza la llamada HTTP a la API y obtiene la respuesta en formato JsonNode
+            RestTemplate restTemplate = new RestTemplate();
+            JsonNode data = restTemplate.getForObject(url, JsonNode.class);
+
+            log.info("Data response: {}", data);
         } catch (Exception e) {
             // Si llega a darse un fallo, devuelve un error 500
             ErrorDetails errorDetails = new ErrorDetails("g100", "Error interno del servidor");
