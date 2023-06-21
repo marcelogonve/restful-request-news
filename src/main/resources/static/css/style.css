@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900;1000&display=swap');
+
+body {
+    font-family: "Nunito", sans-serif;
+}
+
+.title {
+    width: 100%;
+    display: grid;
+    place-content: center;
+    text-align: center;
+}
+
+.title h2 {
+    font-weight: 900;
+    margin: 20px 0;
+}
+
+.title h3 {
+    margin: 0;
+}
+
+.section-principal {
+    width: 100%;
+    height: 480px;
+    display: grid;
+    place-content: center;
+}
+
+.search-section {
+    width: 100%;
+    display: grid;
+    place-content: center;
+}
+
+.group {
+    display: flex;
+    line-height: 28px;
+    align-items: center;
+    position: relative;
+    max-width: 190px;
+}
+
+.input {
+    width: 100%;
+    height: 40px;
+    line-height: 28px;
+    padding: 0 1rem;
+    padding-left: 2.5rem;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    outline: none;
+    background-color: #f3f3f4;
+    color: #000000;
+    transition: .3s ease;
+}
+
+.input::placeholder {
+    color: #9e9ea7;
+}
+
+.input:focus, input:hover {
+    outline: none;
+    border-color: rgba(52, 51, 51, 0.4);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(13, 13, 13, 0.1);
+}
+
+.icon {
+    position: absolute;
+    left: 1rem;
+    fill: #9e9ea7;
+    width: 1rem;
+    height: 1rem;
+}
+
+.download-buttons {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.button {
+    position: relative;
+    width: 150px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 1px solid #000000;
+    background-color: #040404;
+    overflow: hidden;
+    margin-right: 10px;
+}
+
+.button, .button__icon, .button__text {
+    transition: all 0.3s;
+}
+
+.button .button__text {
+    transform: translateX(22px);
+    color: #fff;
+    font-weight: 600;
+}
+
+.button .button__icon {
+    position: absolute;
+    transform: translateX(109px);
+    height: 100%;
+    width: 39px;
+    background-color: #040404;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button .svg {
+    width: 20px;
+    fill: #fff;
+}
+
+.button:hover {
+    background: #0c0c0c;
+}
+
+.button:hover .button__text {
+    color: transparent;
+}
+
+.button:hover .button__icon {
+    width: 148px;
+    transform: translateX(0);
+}
+
+.button:active .button__icon {
+    background-color: #0c0c0c;
+}
+
+.button:active {
+    border: 1px solid #0c0c0c;
+}
+
+.footer-section {
+    width: 100%;
+    display: grid;
+    place-content: center;
+}
+
+.footer-section span {
+    font-weight: 300;
+    color: #908e8e;
+}

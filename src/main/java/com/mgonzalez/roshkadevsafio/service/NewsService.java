@@ -12,11 +12,15 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -96,10 +100,22 @@ public class NewsService implements NewsServiceInterface {
 
             log.info("Lista de noticias: {}", allNews);
 
-            ObjectMapper objectMapper = new ObjectMapper();
+            ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            String acceptHeader = requestAttributes.getRequest().getHeader("Accept");
+
+            // Se verifica el formato solicitado y se genera la respuesta correspondiente
+            if (acceptHeader != null && acceptHeader.contains(MediaType.APPLICATION_JSON_VALUE)) {
+                // Se genera la respuesta en formato JSON
+                return ResponseEntity.ok().body(allNews);
+            } else {
+                ErrorDetailsDTO errorDetailsDTO = new ErrorDetailsDTO("g400", "Formato no soportado");
+                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorDetailsDTO);
+            }
+
+            /* ObjectMapper objectMapper = new ObjectMapper();
             String jsonString;
 
-             try {
+            try {
                 jsonString = objectMapper.writeValueAsString(allNews);
                 log.info("JSONObject de noticias: {}", jsonString);
 
@@ -109,7 +125,7 @@ public class NewsService implements NewsServiceInterface {
                 fileWriter.close();
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
-            }
+            } */
 
         } catch (HttpClientErrorException e) {
             log.info("HTTP error status: {}", e.getStatusCode());
