@@ -1,8 +1,5 @@
 package com.mgonzalez.roshkadevsafio.service;
 
-import com.mgonzalez.roshkadevsafio.dto.ErrorDetailsDTO;
-import com.mgonzalez.roshkadevsafio.interfaces.NewsServiceInterface;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.time.Instant;
@@ -26,6 +23,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgonzalez.roshkadevsafio.controller.NewsController;
+import com.mgonzalez.roshkadevsafio.dto.ErrorDetailsDTO;
+import com.mgonzalez.roshkadevsafio.interfaces.NewsServiceInterface;
 
 @Service
 public class NewsService implements NewsServiceInterface {
