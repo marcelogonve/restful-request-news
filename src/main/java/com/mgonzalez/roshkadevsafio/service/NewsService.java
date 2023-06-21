@@ -1,7 +1,5 @@
 package com.mgonzalez.roshkadevsafio.service;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -14,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -23,7 +20,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgonzalez.roshkadevsafio.controller.NewsController;
@@ -91,9 +87,11 @@ public class NewsService implements NewsServiceInterface {
                 String fecha = formatter.format(instant);
                 article.put("fecha", fecha);
                 article.put("enlace", ref + item.get("link").asText());
-                article.put("enlace_foto", item.get("image").asText());
-                article.put("titulo", item.get("title").asText());
-                article.put("resumen", item.get("description").asText());                
+                article.put("enlace_foto", ref + item.get("promo_image").asText());
+                // Reemplazamos las comillas dobles por comillas simples en el título y en la descripción
+                // Esto para evitar errores en la generación del JSON
+                article.put("titulo", item.get("title").asText().replaceAll("\"", "'"));
+                article.put("resumen", item.get("description").asText().replaceAll("\"", "'"));
 
                 allNews.add(article);
             }
@@ -111,21 +109,6 @@ public class NewsService implements NewsServiceInterface {
                 ErrorDetailsDTO errorDetailsDTO = new ErrorDetailsDTO("g400", "Formato no soportado");
                 return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorDetailsDTO);
             }
-
-            /* ObjectMapper objectMapper = new ObjectMapper();
-            String jsonString;
-
-            try {
-                jsonString = objectMapper.writeValueAsString(allNews);
-                log.info("JSONObject de noticias: {}", jsonString);
-
-                File file = new File("/home/mgonzalez/Workspace/result.txt");
-                FileWriter fileWriter = new FileWriter(file);
-                fileWriter.write(jsonString);
-                fileWriter.close();
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            } */
 
         } catch (HttpClientErrorException e) {
             log.info("HTTP error status: {}", e.getStatusCode());

@@ -13,8 +13,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(xhr.status === 200) {
                     var response = xhr.response;
                     var jsonString = JSON.stringify(response);
+                    var cleanedJsonString = jsonString.replace(/\\/g, '')
+                                            .replace(/^\"/, '')
+                                            .replace(/\"$/, '');
 
-                    var blob = new Blob([jsonString], { type: 'application/json' });
+                    var blob = new Blob([cleanedJsonString], { type: 'application/json' });
 
                     var downloadLink = document.createElement('a');
                     downloadLink.href = URL.createObjectURL(blob);
