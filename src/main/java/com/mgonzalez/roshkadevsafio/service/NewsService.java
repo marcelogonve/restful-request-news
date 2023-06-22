@@ -1,5 +1,6 @@
 package com.mgonzalez.roshkadevsafio.service;
 
+import java.io.StringWriter;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -8,10 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -25,6 +30,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mgonzalez.roshkadevsafio.controller.NewsController;
 import com.mgonzalez.roshkadevsafio.dto.ErrorDetailsDTO;
 import com.mgonzalez.roshkadevsafio.interfaces.NewsServiceInterface;
+import com.mgonzalez.roshkadevsafio.model.Article;
+import com.mgonzalez.roshkadevsafio.model.ArticleListWrapper;
 
 @Service
 public class NewsService implements NewsServiceInterface {
@@ -75,42 +82,53 @@ public class NewsService implements NewsServiceInterface {
                 return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
             }
 
-            String ref = "https://www.abc.com.py";
-            long unixTimesTamp = 0L;
-            List<Map<String, String>> allNews = new ArrayList<>();
-            
-            for (JsonNode item : items) {
-                Map<String, String> article = new HashMap<>();
-                unixTimesTamp = item.get("pubdateunix").asLong();
-                Instant instant = Instant.ofEpochSecond(unixTimesTamp);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("America/Asuncion"));
-                String fecha = formatter.format(instant);
-                article.put("fecha", fecha);
-                article.put("enlace", ref + item.get("link").asText());
-                article.put("enlace_foto", ref + item.get("promo_image").asText());
-                // Reemplazamos las comillas dobles por comillas simples en el título y en la descripción
-                // Esto para evitar errores en la generación del JSON
-                article.put("titulo", item.get("title").asText().replaceAll("\"", "'"));
-                article.put("resumen", item.get("description").asText().replaceAll("\"", "'"));
+            // Se cargan todas las noticias entontradas en una lista
+            List<Map<String, String>> allNews = getAllNewsList(items);
 
-                allNews.add(article);
-            }
-
-            log.info("Lista de noticias: {}", allNews);
-
+            // Para el header Accept
             ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             String acceptHeader = requestAttributes.getRequest().getHeader("Accept");
 
             // Se verifica el formato solicitado y se genera la respuesta correspondiente
             if (acceptHeader != null && acceptHeader.contains(MediaType.APPLICATION_JSON_VALUE)) {
-                // Se genera la respuesta en formato JSON
+                // Se devuelve una lista. Se formatea a JSON por medio de JS
                 return ResponseEntity.ok().body(allNews);
+            } else if(acceptHeader != null && acceptHeader.contains(MediaType.APPLICATION_XML_VALUE)) {
+                // Se genera la respuesta en formato XML
+                List<Article> articleList = getArticleList(allNews);
+
+                try {
+                    JAXBContext jaxbContext = JAXBContext.newInstance(ArticleListWrapper.class);
+                    Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+                    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+                    ArticleListWrapper wrapper = new ArticleListWrapper();
+                    wrapper.setArticles(articleList);
+
+                    StringWriter sw = new StringWriter();
+                    jaxbMarshaller.marshal(wrapper, sw);
+
+                    return ResponseEntity.ok().body(sw.toString());
+                } catch (JAXBException e) {
+                    log.info("Error XML generate cause: {}", e.getCause());
+                    log.info("Error XML generate: {}", e.getMessage());
+                }
+            } else if(acceptHeader != null && (acceptHeader.contains(MediaType.TEXT_HTML_VALUE)
+                    || acceptHeader != null && acceptHeader.contains(MediaType.TEXT_PLAIN_VALUE))) {
+                // Se genera la respuesta en formato HTML simple (muy simple) o en texto plano
+                // Dependiendo de accept
+                String responseToReturn = getHtmlOrTextPlain(acceptHeader, allNews);
+                
+                return ResponseEntity.ok().body(responseToReturn);
+            } else if(acceptHeader != null && acceptHeader.contains(MediaType.TEXT_PLAIN_VALUE)) {
+
             } else {
                 ErrorDetailsDTO errorDetailsDTO = new ErrorDetailsDTO("g400", "Formato no soportado");
                 return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorDetailsDTO);
             }
 
-        } catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException e) { // Por si falla la API de ABC
             log.info("HTTP error status: {}", e.getStatusCode());
             log.info("HTTP error response body: {}", e.getResponseBodyAsString());
         } catch (Exception e) {
@@ -122,5 +140,79 @@ public class NewsService implements NewsServiceInterface {
         }
 
         return new ResponseEntity<>(query, HttpStatus.OK);
+    }
+
+    private List<Map<String, String>> getAllNewsList(JsonNode items) {
+        String ref = "https://www.abc.com.py";
+        long unixTimesTamp = 0L;
+
+        
+        List<Map<String, String>> allNewsReturn = new ArrayList<>();
+        for (JsonNode item : items) {
+            Map<String, String> article = new HashMap<>();
+            unixTimesTamp = item.get("pubdateunix").asLong();
+            Instant instant = Instant.ofEpochSecond(unixTimesTamp);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("America/Asuncion"));
+            String fecha = formatter.format(instant);
+            article.put("fecha", fecha);
+            article.put("enlace", ref + item.get("link").asText());
+            article.put("enlace_foto", ref + item.get("promo_image").asText());
+            // Reemplazamos las comillas dobles por comillas simples en el título y en la descripción
+            // Esto para evitar errores en la generación del JSON por JS
+            article.put("titulo", item.get("title").asText().replaceAll("\"", "'"));
+            article.put("resumen", item.get("description").asText().replaceAll("\"", "'"));
+
+            allNewsReturn.add(article);
+        }
+
+        return allNewsReturn;
+    }
+
+    private List<Article> getArticleList(List<Map<String, String>> allNews) {
+        List<Article> articleListReturn = new ArrayList<>();
+        for (Map<String, String> map : allNews) {
+            Article article = new Article();
+            article.setFecha(map.get("fecha"));
+            article.setEnlace(map.get("enlace"));
+            article.setEnlaceFoto(map.get("enlace_foto"));
+            article.setTitulo(map.get("titulo"));
+            article.setResumen(map.get("resumen"));
+
+            articleListReturn.add(article);
+        }
+        
+        return articleListReturn;
+    }
+
+    private String getHtmlOrTextPlain(String acceptHeader, List<Map<String, String>> allNews) {
+        StringBuilder sb = new StringBuilder();
+
+        if(acceptHeader.contains(MediaType.TEXT_HTML_VALUE)) {
+            sb.append("<html>\n");
+            sb.append("<head><title>API RESTful News</title></head>");
+            sb.append("<body>\n");
+            for(Map<String, String> article : allNews) {
+                sb.append("<div>\n");
+                sb.append("<h1>").append(article.get("titulo")).append("</h1>\n");
+                sb.append("<p>").append(article.get("fecha")).append("</p>\n");
+                sb.append("<p>").append(article.get("resumen")).append("</p>\n");
+                sb.append("<a href='").append(article.get("enlace")).append("'>Leer más</a>\n");
+                sb.append("<img src='").append(article.get("enlace_foto")).append("' alt='Imagen del artículo'>\n");
+                sb.append("</div>\n");
+            }
+            sb.append("</body>\n");
+            sb.append("</html>");
+        } else if (acceptHeader.contains(MediaType.TEXT_PLAIN_VALUE)) {
+            for(Map<String, String> article : allNews) {
+                sb.append("Título: ").append(article.get("titulo")).append("\n");
+                sb.append("Fecha: ").append(article.get("fecha")).append("\n");
+                sb.append("Resumen: ").append(article.get("resumen")).append("\n");
+                sb.append("Enlace: ").append(article.get("enlace")).append("\n");
+                sb.append("Enlace a la imagen: ").append(article.get("enlace_foto")).append("\n");
+                sb.append("#################################################\n");
+            }
+        }
+
+        return sb.toString();
     }
 }

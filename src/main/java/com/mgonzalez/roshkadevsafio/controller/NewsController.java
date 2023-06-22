@@ -19,11 +19,11 @@ public class NewsController implements NewsControllerInterface {
     Logger log = LoggerFactory.getLogger(NewsController.class);
 
     @Autowired
-    NewsServiceInterface newsControllerService;
+    NewsServiceInterface newsService;
     
     @Override
     @RequestMapping("/consulta")
-    public ResponseEntity<Object> getNews(@RequestParam(value = "query", defaultValue="") String query) {
+    public ResponseEntity<Object> getNews(@RequestParam(value = "q", defaultValue="") String query) {
         log.info("Query recibido: {}", query);
 
         if(query.isEmpty()) {
@@ -31,6 +31,6 @@ public class NewsController implements NewsControllerInterface {
             return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
         }
 
-        return newsControllerService.getNews(query);
+        return newsService.getNews(query);
     }
 }

@@ -33,6 +33,18 @@ body {
     place-content: center;
 }
 
+#info {
+    font-size: 14px;
+    padding-bottom: 20px;
+}
+
+.input-search {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .group {
     display: flex;
     line-height: 28px;
