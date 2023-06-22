@@ -14,6 +14,11 @@ import com.mgonzalez.roshkadevsafio.dto.ErrorDetailsDTO;
 import com.mgonzalez.roshkadevsafio.interfaces.NewsControllerInterface;
 import com.mgonzalez.roshkadevsafio.interfaces.NewsServiceInterface;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
+@Api(tags = "News") // Etiqueta para agrupar el controlador en la UI de Swagger
 @RestController
 public class NewsController implements NewsControllerInterface {
     Logger log = LoggerFactory.getLogger(NewsController.class);
@@ -22,8 +27,14 @@ public class NewsController implements NewsControllerInterface {
     NewsServiceInterface newsService;
     
     @Override
+    @ApiOperation(value = "Obtener noticias", notes = "Este endpoint devuelve noticias basadas en la query proporcionada.")
     @RequestMapping("/consulta")
-    public ResponseEntity<Object> getNews(@RequestParam(value = "q", defaultValue="") String query) {
+    public ResponseEntity<Object> getNews(
+                                        @ApiParam(value = "Query para buscar noticias", required = false)
+                                        @RequestParam(value = "q", defaultValue="")
+                                        String query
+                                        ) {
+
         log.info("Query recibido: {}", query);
 
         if(query.isEmpty()) {

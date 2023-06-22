@@ -1,4 +1,4 @@
-# API RESTful para búsqueda de noticias en un portal de noticias
+# API RESTful para búsqueda de noticias en un portal
 
 Proyecto desarrolado en Spring Boot, diseñado para buscar y recuperar noticias de un portal de noticias de Paraguay.
 El concepto es bastante sencillo, se hace la consulta a la API RESTful y se obtienen los resultados.

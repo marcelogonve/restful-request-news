@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     document.body.removeChild(downloadLink);
                 } else {
-                    console.error('Error en la solicitud:', xhr.status);
+                    var errorResponse = JSON.parse(xhr.responseText);
+                    alert(errorResponse.error + '. Código: ' + errorResponse.code);
                 }
             }
         };
@@ -64,7 +65,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     document.body.removeChild(downloadLink);
                 } else {
-                    console.error('Error en la solicitud:', xhr.status);
+                    var errorResponse = JSON.parse(xhr.responseText);
+                    alert(errorResponse.error + '. Código: ' + errorResponse.code);
                 }
             }
         };
@@ -95,7 +97,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     document.body.removeChild(downloadLink);
                 } else {
-                    console.error('Error en la solicitud:', xhr.status);
+                    var errorResponse = JSON.parse(xhr.responseText);
+                    alert(errorResponse.error + '. Código: ' + errorResponse.code);
                 }
             }
         };
@@ -126,7 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     document.body.removeChild(downloadLink);
                 } else {
-                    console.error('Error en la solicitud:', xhr.status);
+                    var errorResponse = JSON.parse(xhr.responseText);
+                    alert(errorResponse.error + '. Código: ' + errorResponse.code);
                 }
             }
         };
