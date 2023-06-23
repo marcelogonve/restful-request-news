@@ -1,10 +1,14 @@
 package com.mgonzalez.roshkadevsafio.service;
 
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +17,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -38,7 +43,7 @@ public class NewsService implements NewsServiceInterface {
     Logger log = LoggerFactory.getLogger(NewsController.class);
     
     @Override
-    public ResponseEntity<Object> getNews(String query) {        
+    public ResponseEntity<Object> getNews(String query, Boolean includeImage) {        
         try {
             /*
              * En primera instancia se intentó realizar web scraping directamente a la página de ABC
@@ -83,11 +88,12 @@ public class NewsService implements NewsServiceInterface {
             }
 
             // Se cargan todas las noticias entontradas en una lista
-            List<Map<String, String>> allNews = getAllNewsList(items);
+            List<Map<String, String>> allNews = getAllNewsList(items, includeImage);
 
             // Para el header Accept
             ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             String acceptHeader = requestAttributes.getRequest().getHeader("Accept");
+            log.info("Accept: {}", acceptHeader);
 
             // Se verifica el formato solicitado y se genera la respuesta correspondiente
             if (acceptHeader != null && acceptHeader.contains(MediaType.APPLICATION_JSON_VALUE)) {
@@ -124,7 +130,7 @@ public class NewsService implements NewsServiceInterface {
             } else if(acceptHeader != null && acceptHeader.contains(MediaType.TEXT_PLAIN_VALUE)) {
 
             } else {
-                ErrorDetailsDTO errorDetailsDTO = new ErrorDetailsDTO("g400", "Formato no soportado");
+                ErrorDetailsDTO errorDetailsDTO = new ErrorDetailsDTO("g406", "Formato no soportado");
                 return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorDetailsDTO);
             }
 
@@ -142,7 +148,7 @@ public class NewsService implements NewsServiceInterface {
         return new ResponseEntity<>(query, HttpStatus.OK);
     }
 
-    private List<Map<String, String>> getAllNewsList(JsonNode items) {
+    private List<Map<String, String>> getAllNewsList(JsonNode items, Boolean includeImage) {
         String ref = "https://www.abc.com.py";
         long unixTimesTamp = 0L;
 
@@ -161,6 +167,15 @@ public class NewsService implements NewsServiceInterface {
             // Esto para evitar errores en la generación del JSON por JS
             article.put("titulo", item.get("title").asText().replaceAll("\"", "'"));
             article.put("resumen", item.get("description").asText().replaceAll("\"", "'"));
+            if(includeImage) {
+                String imageUrl = article.get("enlace_foto");
+                Map<String, String> imageDetails = fetchImageDetails(imageUrl);
+                /* 
+                 * contenido_foto
+                 * content_type
+                 */
+                article.putAll(imageDetails);
+            }
 
             allNewsReturn.add(article);
         }
@@ -214,5 +229,34 @@ public class NewsService implements NewsServiceInterface {
         }
 
         return sb.toString();
+    }
+
+    private Map<String, String> fetchImageDetails(String imagenUrl) {
+        Map<String, String> imageDetails = new HashMap<>();
+
+        try {
+            URL url = new URL(imagenUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setDoInput(true);
+            connection.connect();
+
+            // Obtenemos el content type
+            String contentType = connection.getContentType();
+
+            // Convertimos la imagen a base64
+            InputStream inputStream = connection.getInputStream();
+            byte[] bytes = IOUtils.toByteArray(inputStream);
+            String encodedImage = Base64.getEncoder().encodeToString(bytes);
+
+            imageDetails.put("contenido_foto", encodedImage);
+            imageDetails.put("content_type", contentType);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("Error cause in fetchImageDetails: {}", e.getCause());
+            log.info("Error in fetchImageDetails: {}", e.getMessage());
+        }
+
+        return imageDetails;
     }
 }

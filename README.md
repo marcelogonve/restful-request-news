@@ -26,8 +26,11 @@ Si cumples con todos, sigue los pasos a continuación:
 1. Clonar el repositorio.
 2. Situarse en el directorio del proyecto.
 3. Ejecutar `mvn spring-boot:run` para iniciar la aplicación.
-4. Abrir un navegador web y navegar a `http://localhost:8080`.
-5. Introducir la consulta en el campo de entrada y presionar el botón para descargar un archivo con el formato deseado.
+4. Abrir un navegador web y navegar a `http://localhost:8080`, verás una UI intuitiva y sencilla.
+5. Introducir la consulta en el campo de entrada y presionar el botón para procesar y descargar un archivo con el formato deseado.
+
+Es posible que se presenten errores al tratar de levantar el proyecto (espero que no). Si se presentan errores, ejecuta el comando `mvn clean` y luego el paso 3. Si aún siguen presentándose errores, ejecuta el comando `mvn dependency:tree`.
+A veces el problema son las dependencias, las benditas dependencias.
 
 ## Requisitos para ejecutar el proyecto en Windows
 
@@ -57,6 +60,10 @@ Para instalar Maven es necesario seguir una serie de pasos adicionales:
 - Configura la variable de entorno para Maven. Para ello, con tu editor de texto preferido, abre el fichero `~/.bashrc` y agrega `export M2_HOME=/opt/maven` y `export PATH=$PATH:$M2_HOME/bin` al final. Guarda y cierra el archivo.
 - Luego ejecuta el comando `source ~/.bashrc` para aplicar los cambios.
 - Verifica tu instalación con `mvn -v`.
+
+## Base64
+
+Se implementó la posibilidad de procesar las imágenes en base64 y su content-type, pero solo para el formato JSON, debido a los recursos utilizados al procesar la consulta.
 
 ## Contacto
 

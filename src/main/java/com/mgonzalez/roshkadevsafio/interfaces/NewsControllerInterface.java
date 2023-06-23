@@ -4,6 +4,6 @@ import org.springframework.http.ResponseEntity;
 
 public interface NewsControllerInterface {
 
-    ResponseEntity<Object> getNews(String query);
+    ResponseEntity<Object> getNews(String query, Boolean includeImage);
 
 }
